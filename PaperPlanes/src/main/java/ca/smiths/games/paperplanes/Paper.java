@@ -14,9 +14,15 @@ import javax.microedition.khronos.opengles.GL10;
  */
 class Paper
 {
+    int mColors[];
+    int one;
+    int two;
+
     public Paper()
     {
-        int one = 0x10000;
+        mColors = new int[16];
+        one = 0x10000;
+        two = 0x10000 * 2;
         int vertices[] = {
                 -one, -one, -one,
                 one, -one, -one,
@@ -66,6 +72,32 @@ class Paper
         gl.glVertexPointer(3, gl.GL_FIXED, 0, mVertexBuffer);
         gl.glColorPointer(4, gl.GL_FIXED, 0, mColorBuffer);
         gl.glDrawElements(gl.GL_TRIANGLES, 12, gl.GL_UNSIGNED_BYTE, mIndexBuffer);
+    }
+
+    public int[] cross(int[] x, int[] y, int[] z)
+    {
+        int[] normal = new int [3];
+        normal[0] = (y[1] * z[2]) - (y[2] * z[1]);
+        normal[1] = (z[1] * x[2]) - (z[2] * x[1]);
+        normal[2] = (x[1] * y[2]) - (x[2] * y[1]);
+
+        return normal;
+    }
+
+    public void setColors(int color)
+    {
+        for(int i = 0; i<16; i++)
+        {
+            if((i+1)%4 == 0)
+                mColors[i] = 65536;
+            else
+                mColors[i] = color;
+        }
+        ByteBuffer cbb = ByteBuffer.allocateDirect(mColors.length*4);
+        cbb.order(ByteOrder.nativeOrder());
+        mColorBuffer = cbb.asIntBuffer();
+        mColorBuffer.put(mColors);
+        mColorBuffer.position(0);
     }
 
     private IntBuffer   mVertexBuffer;

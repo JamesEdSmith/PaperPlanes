@@ -5,7 +5,7 @@ package ca.smiths.games.paperplanes;
 
         import javax.microedition.khronos.egl.EGLConfig;
         import javax.microedition.khronos.opengles.GL10;
-
+        import java.nio.FloatBuffer;
         import android.opengl.GLSurfaceView;
 
 /**
@@ -78,11 +78,17 @@ class PaperRenderer implements GLSurfaceView.Renderer {
         if (mTranslucentBackground) {
             gl.glClearColor(0,0,0,0);
         } else {
-            gl.glClearColor(1,1,1,1);
+            gl.glClearColor(0,0,0,1);
         }
         gl.glEnable(GL10.GL_CULL_FACE);
         gl.glShadeModel(GL10.GL_SMOOTH);
         gl.glEnable(GL10.GL_DEPTH_TEST);
+        //lighting
+        gl.glEnable(gl.GL_LIGHTING);
+        gl.glEnable(gl.GL_LIGHT0);
+        float lightarray[] = {0f, 0f, 1f, 0f};
+        FloatBuffer lightpos = FloatBuffer.wrap(lightarray);
+        gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, lightpos);
     }
     private boolean mTranslucentBackground;
     private Paper mCube;

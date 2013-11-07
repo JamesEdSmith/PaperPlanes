@@ -19,7 +19,7 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mGLView = new GLSurfaceView(this);
-        mGLView.setRenderer(new PaperRenderer(true));
+        mGLView.setRenderer(new PaperRenderer(false));
         setContentView(mGLView);
     }
 
