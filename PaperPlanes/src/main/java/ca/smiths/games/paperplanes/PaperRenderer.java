@@ -31,18 +31,26 @@ class PaperRenderer implements GLSurfaceView.Renderer {
          * Now we're ready to draw some 3D objects
          */
 
+        mAngle += 1.2f;
+        //mCube.rotation[0] = mAngle;
+        mCube.rotation[1] = mAngle;
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glLoadIdentity();
-        gl.glTranslatef(0, 0, -3.0f);
-        gl.glRotatef(mAngle,        0, 1, 0);
-        gl.glRotatef(mAngle*0.25f,  1, 0, 0);
+        gl.glTranslatef(mCube.position[0], mCube.position[1], mCube.position[2]);
+        gl.glRotatef(mCube.rotation[0], 1, 0, 0);
+        gl.glRotatef(mCube.rotation[1], 0, 1, 0);
+        gl.glRotatef(mCube.rotation[2], 0, 0, 1);
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+        gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
         gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 
         mCube.draw(gl);
 
-        mAngle += 1.2f;
+        gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
+        gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
+        gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
+
     }
 
     public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -78,17 +86,19 @@ class PaperRenderer implements GLSurfaceView.Renderer {
         if (mTranslucentBackground) {
             gl.glClearColor(0,0,0,0);
         } else {
-            gl.glClearColor(0,0,0,1);
+            gl.glClearColor(0.5f,0.5f,0,1);
         }
         gl.glEnable(GL10.GL_CULL_FACE);
-        gl.glShadeModel(GL10.GL_SMOOTH);
-        gl.glEnable(GL10.GL_DEPTH_TEST);
+        gl.glShadeModel(GL10.GL_FLAT);
         //lighting
         gl.glEnable(gl.GL_LIGHTING);
         gl.glEnable(gl.GL_LIGHT0);
-        float lightarray[] = {0f, 0f, 1f, 0f};
-        FloatBuffer lightpos = FloatBuffer.wrap(lightarray);
-        gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, lightpos);
+        float firstarray[] = {0f, 0f, 10f};
+        FloatBuffer posarray = FloatBuffer.wrap(firstarray);
+        gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, posarray);
+        float secondarray[] = {0f, 0f, -1f};
+        FloatBuffer directionarray = FloatBuffer.wrap(secondarray);
+        gl.glLightfv(gl.GL_LIGHT0, gl.GL_SPOT_DIRECTION, directionarray);
     }
     private boolean mTranslucentBackground;
     private Paper mCube;

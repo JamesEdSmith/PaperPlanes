@@ -6,6 +6,7 @@ package ca.smiths.games.paperplanes;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -17,6 +18,8 @@ class Paper
     int mColors[];
     int one;
     int two;
+    public float position [] = {0,0,-2};
+    public float rotation [] = {0,0,0};
 
     public Paper()
     {
@@ -24,10 +27,31 @@ class Paper
         one = 0x10000;
         two = 0x10000 * 2;
         int vertices[] = {
-                -one, -one, -one,
-                one, -one, -one,
-                one,  one, -one,
-                -one,  one, -one,
+                -one, -one, 0,
+                one, -one, 0,
+                one,  one, 0,
+                -one,  one, 0,
+        };
+
+        int vertices2[] = {
+                -one, -one, 1,
+                one, -one, 1,
+                one,  one, 1,
+                -one,  one, 1,
+        };
+
+        float fNormals[] = {
+            0,0,1,
+            0,0,1,
+            0,0,1,
+            0,0,1,
+        };
+
+        float bNormals[] = {
+                0,0,1,
+                0,0,1,
+                0,0,1,
+                0,0,1,
         };
 
         int colors[] = {
@@ -37,9 +61,12 @@ class Paper
                 one,  one,    one,  one,
         };
 
-        byte indices[] = {
-                0, 1, 3,    3, 1, 2,
-                0, 3, 1,    3, 2, 1,
+        byte fIndices[] = {
+                0, 1, 2,    0, 2, 3,
+        };
+
+        byte bIndices[] = {
+                1, 0, 3,    1, 3, 2,
         };
 
         // Buffers to be passed to gl*Pointer() functions
@@ -52,56 +79,61 @@ class Paper
 
         ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length*4);
         vbb.order(ByteOrder.nativeOrder());
-        mVertexBuffer = vbb.asIntBuffer();
-        mVertexBuffer.put(vertices);
-        mVertexBuffer.position(0);
+        fVertexBuffer = vbb.asIntBuffer();
+        fVertexBuffer.put(vertices);
+        fVertexBuffer.position(0);
+
+        ByteBuffer vbb2 = ByteBuffer.allocateDirect(vertices2.length*4);
+        vbb2.order(ByteOrder.nativeOrder());
+        bVertexBuffer = vbb2.asIntBuffer();
+        bVertexBuffer.put(vertices2);
+        bVertexBuffer.position(0);
 
         ByteBuffer cbb = ByteBuffer.allocateDirect(colors.length*4);
         cbb.order(ByteOrder.nativeOrder());
-        mColorBuffer = cbb.asIntBuffer();
-        mColorBuffer.put(colors);
-        mColorBuffer.position(0);
+        fColorBuffer = cbb.asIntBuffer();
+        fColorBuffer.put(colors);
+        fColorBuffer.position(0);
 
-        mIndexBuffer = ByteBuffer.allocateDirect(indices.length);
-        mIndexBuffer.put(indices);
-        mIndexBuffer.position(0);
+        ByteBuffer fbb = ByteBuffer.allocateDirect(fNormals.length*4);
+        fbb.order(ByteOrder.nativeOrder());
+        fNormalBuffer = fbb.asFloatBuffer();
+        fNormalBuffer.put(fNormals);
+        fNormalBuffer.position(0);
+
+        ByteBuffer bbb = ByteBuffer.allocateDirect(bNormals.length*4);
+        bbb.order(ByteOrder.nativeOrder());
+        bNormalBuffer = bbb.asFloatBuffer();
+        bNormalBuffer.put(bNormals);
+        bNormalBuffer.position(0);
+
+        fIndexBuffer = ByteBuffer.allocateDirect(fIndices.length);
+        fIndexBuffer.put(fIndices);
+        fIndexBuffer.position(0);
+
+        bIndexBuffer = ByteBuffer.allocateDirect(bIndices.length);
+        bIndexBuffer.put(bIndices);
+        bIndexBuffer.position(0);
     }
 
     public void draw(GL10 gl)
     {
-        gl.glVertexPointer(3, gl.GL_FIXED, 0, mVertexBuffer);
-        gl.glColorPointer(4, gl.GL_FIXED, 0, mColorBuffer);
-        gl.glDrawElements(gl.GL_TRIANGLES, 12, gl.GL_UNSIGNED_BYTE, mIndexBuffer);
+        gl.glVertexPointer(3, GL10.GL_FIXED, 0, fVertexBuffer);
+        gl.glColorPointer(4, GL10.GL_FIXED, 0, fColorBuffer);
+        //draw front of paper
+        gl.glNormalPointer(GL10.GL_FLOAT, 0, fNormalBuffer);
+        gl.glDrawElements(GL10.GL_TRIANGLES, 6, GL10.GL_UNSIGNED_BYTE, fIndexBuffer);
+        gl.glNormalPointer(GL10.GL_FLOAT, 0, bNormalBuffer);
+        gl.glDrawElements(GL10.GL_TRIANGLES, 6, GL10.GL_UNSIGNED_BYTE, bIndexBuffer);
+
     }
 
-    public int[] cross(int[] x, int[] y, int[] z)
-    {
-        int[] normal = new int [3];
-        normal[0] = (y[1] * z[2]) - (y[2] * z[1]);
-        normal[1] = (z[1] * x[2]) - (z[2] * x[1]);
-        normal[2] = (x[1] * y[2]) - (x[2] * y[1]);
-
-        return normal;
-    }
-
-    public void setColors(int color)
-    {
-        for(int i = 0; i<16; i++)
-        {
-            if((i+1)%4 == 0)
-                mColors[i] = 65536;
-            else
-                mColors[i] = color;
-        }
-        ByteBuffer cbb = ByteBuffer.allocateDirect(mColors.length*4);
-        cbb.order(ByteOrder.nativeOrder());
-        mColorBuffer = cbb.asIntBuffer();
-        mColorBuffer.put(mColors);
-        mColorBuffer.position(0);
-    }
-
-    private IntBuffer   mVertexBuffer;
-    private IntBuffer   mColorBuffer;
-    private ByteBuffer  mIndexBuffer;
+    private IntBuffer   fVertexBuffer;
+    private IntBuffer   bVertexBuffer;
+    private IntBuffer   fColorBuffer;
+    private ByteBuffer  fIndexBuffer;
+    private FloatBuffer fNormalBuffer;
+    private ByteBuffer  bIndexBuffer;
+    private FloatBuffer bNormalBuffer;
 }
 
