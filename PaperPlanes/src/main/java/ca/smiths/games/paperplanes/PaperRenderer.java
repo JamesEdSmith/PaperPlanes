@@ -3,10 +3,9 @@
  */
 package ca.smiths.games.paperplanes;
 
-        import javax.microedition.khronos.egl.EGLConfig;
-        import javax.microedition.khronos.opengles.GL10;
-        import java.nio.FloatBuffer;
-        import android.opengl.GLSurfaceView;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+import android.opengl.GLSurfaceView;
 
 /**
  * Render a pair of tumbling cubes.
@@ -86,48 +85,17 @@ class PaperRenderer implements GLSurfaceView.Renderer {
         if (mTranslucentBackground) {
             gl.glClearColor(0,0,0,0);
         } else {
-            gl.glClearColor(0.5f,0.5f,0,1);
+            gl.glClearColor(0.07f, 0.639f, 0.7f, 1f);
         }
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glEnable(GL10.GL_CULL_FACE);
-        gl.glEnable(GL10.GL_COLOR_MATERIAL);
         gl.glShadeModel(GL10.GL_FLAT);
         //lighting
         // Define the ambient component of the first light
-        float lightAmbient[] = {0.1f, 0.1f, 0.1f, 1.0f};
-        FloatBuffer light0Ambient = FloatBuffer.wrap(lightAmbient);
-
-        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_AMBIENT, light0Ambient);
-
-        // Define the diffuse component of the first light
-        float lightDiffuse[] = {0.7f, 0.7f, 0.7f, 1.0f};
-        FloatBuffer light0Diffuse = FloatBuffer.wrap(lightDiffuse);
-        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, light0Diffuse);
-
-        // Define the specular component and shininess of the first light
-        float lightSpecular[] = {0.7f, 0.7f, 0.7f, 1.0f};
-        FloatBuffer light0Specular = FloatBuffer.wrap(lightSpecular);
-        float light0Shininess = 0.4f;
-        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPECULAR, light0Specular);
-
-
-        // Define the position of the first light
-        float lightPosition[] = {0.0f, 10.0f, 10.0f, 0.0f};
-        FloatBuffer light0Position = FloatBuffer.wrap(lightPosition);
-        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, light0Position);
-
-        // Define a direction vector for the light, this one points right down the Z axis
-        float lightDirection[] = {0.0f, 0.0f, -1.0f};
-        FloatBuffer light0Direction = FloatBuffer.wrap(lightDirection);
-        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPOT_DIRECTION, light0Direction);
-
-        // Define a cutoff angle. This defines a 90° field of vision, since the cutoff
-        // is number of degrees to each side of an imaginary line drawn from the light's
-        // position along the vector supplied in GL_SPOT_DIRECTION above
-        gl.glLightf(GL10.GL_LIGHT0, GL10.GL_SPOT_CUTOFF, 45.0f);
+        gl.glEnable(GL10.GL_LIGHTING);
+        gl.glEnable(GL10.GL_LIGHT0);
 
         gl.glLoadIdentity();
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     }
     private boolean mTranslucentBackground;
     private Paper mCube;
