@@ -83,12 +83,6 @@ class Paper
         fVertexBuffer.put(vertices);
         fVertexBuffer.position(0);
 
-        ByteBuffer vbb2 = ByteBuffer.allocateDirect(vertices2.length*4);
-        vbb2.order(ByteOrder.nativeOrder());
-        bVertexBuffer = vbb2.asIntBuffer();
-        bVertexBuffer.put(vertices2);
-        bVertexBuffer.position(0);
-
         ByteBuffer cbb = ByteBuffer.allocateDirect(colors.length*4);
         cbb.order(ByteOrder.nativeOrder());
         fColorBuffer = cbb.asIntBuffer();
@@ -123,13 +117,19 @@ class Paper
         //draw front of paper
         gl.glNormalPointer(GL10.GL_FLOAT, 0, fNormalBuffer);
         gl.glDrawElements(GL10.GL_TRIANGLES, 6, GL10.GL_UNSIGNED_BYTE, fIndexBuffer);
+        //gl.glDrawElements(GL10.GL_LINE_LOOP, 6, GL10.GL_UNSIGNED_BYTE, fIndexBuffer);
         gl.glNormalPointer(GL10.GL_FLOAT, 0, bNormalBuffer);
         gl.glDrawElements(GL10.GL_TRIANGLES, 6, GL10.GL_UNSIGNED_BYTE, bIndexBuffer);
+        //gl.glDrawElements(GL10.GL_LINE_LOOP, 6, GL10.GL_UNSIGNED_BYTE, bIndexBuffer);
 
     }
 
+    public void rotateAround(new Vector3(foldPoint1.x, foldPoint1.y, 0f), axis, foldAngle)
+    {
+        //TODO:IMPLEMENT THIS, IMPLEMENT IT REAL GOOD.
+    }
+
     private IntBuffer   fVertexBuffer;
-    private IntBuffer   bVertexBuffer;
     private IntBuffer   fColorBuffer;
     private ByteBuffer  fIndexBuffer;
     private FloatBuffer fNormalBuffer;
