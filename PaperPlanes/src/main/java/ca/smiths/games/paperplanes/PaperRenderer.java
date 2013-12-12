@@ -9,8 +9,11 @@ import android.opengl.GLSurfaceView;
 
 import java.lang.Math;
 import java.nio.FloatBuffer;
+
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.graphics.Camera;
 
 /**
  * Render a pair of tumbling cubes.
@@ -26,10 +29,82 @@ class PaperRenderer implements GLSurfaceView.Renderer {
     private float mAngle;
     private Vector2 foldPoint1;
     private Vector2 foldPoint2;
+    float touchX;
+    float touchY;
+    Camera cam;
 
     public PaperRenderer(boolean useTranslucentBackground) {
         mTranslucentBackground = useTranslucentBackground;
         mCube = new Paper();
+        touchX = touchY = 0f;
+        cam = new PerspectiveCamera(45,width, height);
+        cam.near = 1;
+        cam.far = 10;
+    }
+
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
+        gl.glViewport(0, 0, width, height);
+
+         /*
+          * Set our projection matrix. This doesn't have to be done
+          * each time we draw, but usually a new projection needs to
+          * be set when the viewport is resized.
+          */
+
+        float ratio = (float) width / height;
+        gl.glMatrixMode(GL10.GL_PROJECTION);
+        gl.glLoadIdentity();
+        gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
+    }
+
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        /*
+         * By default, OpenGL enables features that improve quality
+         * but reduce performance. One might want to tweak that
+         * especially on software renderer.
+         */
+        gl.glDisable(GL10.GL_DITHER);
+
+        /*
+         * Some one-time OpenGL initialization can be made here
+         * probably based on features of this particular context
+         */
+        gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT,
+                GL10.GL_FASTEST);
+
+        float ratio = (float) width / height;
+        gl.glMatrixMode(GL10.GL_PROJECTION);
+        gl.glLoadIdentity();
+        gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
+
+        if (mTranslucentBackground) {
+            gl.glClearColor(0,0,0,0);
+        } else {
+            gl.glClearColor(0.07f, 0.639f, 0.7f, 1f);
+        }
+        gl.glMatrixMode(GL10.GL_MODELVIEW);
+        gl.glEnable(GL10.GL_CULL_FACE);
+        gl.glShadeModel(GL10.GL_FLAT);
+        gl.glLineWidth(2f);
+
+        //lighting
+        // Define the ambient component of the first light
+        gl.glEnable(GL10.GL_LIGHTING);
+        gl.glEnable(GL10.GL_LIGHT0);
+        gl.glEnable(GL10.GL_LIGHT1);
+        gl.glEnable(GL10.GL_LIGHT2);
+
+        float lightColor[] = {0.07f, 0.639f, 0.7f, 1f};
+        FloatBuffer light0Ambient = FloatBuffer.wrap(lightColor);
+        float light1PositionVector[] = {1f, 0f, 0f, 0f};
+        FloatBuffer light1Position = FloatBuffer.wrap(light1PositionVector);
+        float light2PositionVector[] = {-1f, 0f, 0f, 0f};
+        FloatBuffer light2Position = FloatBuffer.wrap(light2PositionVector);
+
+        gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_AMBIENT, light0Ambient);
+        gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_POSITION, light1Position);
+        gl.glLightfv(GL10.GL_LIGHT2, GL10.GL_AMBIENT, light0Ambient);
+        gl.glLightfv(GL10.GL_LIGHT2, GL10.GL_POSITION, light2Position);
     }
 
     public void onDrawFrame(GL10 gl) {
@@ -80,8 +155,8 @@ class PaperRenderer implements GLSurfaceView.Renderer {
         float magnitude = (float)Math.pow((dx + dy + dz), 0.5);
 
         axis.scl(magnitude);
-        //TODO: ADD THIS BACK IN
-        //foldAngle = Input.GetAxis("MouseX") * 4f;
+
+        foldAngle = touchX * 4f;
 
         if(Math.abs(foldAngle + foldTracker) <= 180)
         {
@@ -106,6 +181,7 @@ class PaperRenderer implements GLSurfaceView.Renderer {
         //foreach(Transform child in movingFold.transform)
         //child.RotateAround(new Vector3(foldPoint1.x, foldPoint1.y, 0f), axis, foldAngle);
 
+        //TODO: ADD THIS BACK IN
         /*if(Input.GetButton("Fire1"))
         {
             movingFold = null;
@@ -119,7 +195,7 @@ class PaperRenderer implements GLSurfaceView.Renderer {
         if(!moveClick)
         {
             RaycastHit hit;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition); //new Vector3(Input.GetAxis("MouseX"), Input.GetAxis("MouseY"), 0)
+            Ray ray = cam.getPickRay(touchX, touchY);
             if ( Physics.Raycast(ray, out hit, 99999))
             {
                 if(lastHit != hit.collider.gameObject && lastHit)
@@ -139,7 +215,6 @@ class PaperRenderer implements GLSurfaceView.Renderer {
                 {
                     if(!prevClick)
                     {
-                        //foldPoint1 = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                         foldPoint1 = new Vector2(hit.point.x, hit.point.y);
                     }
                     prevClick = true;
@@ -149,7 +224,6 @@ class PaperRenderer implements GLSurfaceView.Renderer {
                 {
                     if (prevClick)
                     {
-                        //foldPoint2 = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                         foldPoint2 = new Vector2(hit.point.x, hit.point.y);
                         foldLine((MeshCollider)hit.collider);
                         hit.collider.gameObject.renderer.material.color = new Color(0.19f, 0.55f, 0.91f, 1.0f);
@@ -219,65 +293,5 @@ class PaperRenderer implements GLSurfaceView.Renderer {
                 moveClick = false;
             }
         }
-    }
-
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
-        gl.glViewport(0, 0, width, height);
-
-         /*
-          * Set our projection matrix. This doesn't have to be done
-          * each time we draw, but usually a new projection needs to
-          * be set when the viewport is resized.
-          */
-
-        float ratio = (float) width / height;
-        gl.glMatrixMode(GL10.GL_PROJECTION);
-        gl.glLoadIdentity();
-        gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
-    }
-
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        /*
-         * By default, OpenGL enables features that improve quality
-         * but reduce performance. One might want to tweak that
-         * especially on software renderer.
-         */
-        gl.glDisable(GL10.GL_DITHER);
-
-        /*
-         * Some one-time OpenGL initialization can be made here
-         * probably based on features of this particular context
-         */
-        gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT,
-                GL10.GL_FASTEST);
-
-        if (mTranslucentBackground) {
-            gl.glClearColor(0,0,0,0);
-        } else {
-            gl.glClearColor(0.07f, 0.639f, 0.7f, 1f);
-        }
-        gl.glMatrixMode(GL10.GL_MODELVIEW);
-        gl.glEnable(GL10.GL_CULL_FACE);
-        gl.glShadeModel(GL10.GL_FLAT);
-        gl.glLineWidth(2f);
-
-        //lighting
-        // Define the ambient component of the first light
-        gl.glEnable(GL10.GL_LIGHTING);
-        gl.glEnable(GL10.GL_LIGHT0);
-        gl.glEnable(GL10.GL_LIGHT1);
-        gl.glEnable(GL10.GL_LIGHT2);
-
-        float lightColor[] = {0.07f, 0.639f, 0.7f, 1f};
-        FloatBuffer light0Ambient = FloatBuffer.wrap(lightColor);
-        float light1PositionVector[] = {1f, 0f, 0f, 0f};
-        FloatBuffer light1Position = FloatBuffer.wrap(light1PositionVector);
-        float light2PositionVector[] = {-1f, 0f, 0f, 0f};
-        FloatBuffer light2Position = FloatBuffer.wrap(light2PositionVector);
-
-        gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_AMBIENT, light0Ambient);
-        gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_POSITION, light1Position);
-        gl.glLightfv(GL10.GL_LIGHT2, GL10.GL_AMBIENT, light0Ambient);
-        gl.glLightfv(GL10.GL_LIGHT2, GL10.GL_POSITION, light2Position);
     }
 }
