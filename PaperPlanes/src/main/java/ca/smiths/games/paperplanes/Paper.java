@@ -3,12 +3,16 @@ package ca.smiths.games.paperplanes;
 /**
  * Created by james.smith on 2013-11-04.
  */
+import com.badlogic.gdx.math.Vector3;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
+
+import java.util.List;
 
 /**
  * A vertex shaded paper.
@@ -20,6 +24,14 @@ class Paper
     int two;
     public float position [] = {0,0,-2};
     public float rotation [] = {0,0,0};
+
+    public List<Vector3> verts;
+    private IntBuffer   fVertexBuffer;
+    private IntBuffer   fColorBuffer;
+    private ByteBuffer  fIndexBuffer;
+    private FloatBuffer fNormalBuffer;
+    private ByteBuffer  bIndexBuffer;
+    private FloatBuffer bNormalBuffer;
 
     public Paper()
     {
@@ -33,12 +45,12 @@ class Paper
                 -one,  one, 0,
         };
 
-        int vertices2[] = {
-                -one, -one, 1,
-                one, -one, 1,
-                one,  one, 1,
-                -one,  one, 1,
-        };
+        verts = new List<Vector3>();
+        for(int i =0; i<12; i+3)
+        {
+            verts.add(new Vector3(vertices[i], vertices[i+1],vertices[i+2]));
+        }
+
 
         float fNormals[] = {
             0,0,1,
@@ -129,11 +141,5 @@ class Paper
         //TODO:IMPLEMENT THIS, IMPLEMENT IT REAL GOOD.
     }
 
-    private IntBuffer   fVertexBuffer;
-    private IntBuffer   fColorBuffer;
-    private ByteBuffer  fIndexBuffer;
-    private FloatBuffer fNormalBuffer;
-    private ByteBuffer  bIndexBuffer;
-    private FloatBuffer bNormalBuffer;
 }
 

@@ -11,6 +11,7 @@ import java.lang.Math;
 import java.nio.FloatBuffer;
 
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.graphics.Camera;
@@ -190,13 +191,14 @@ class PaperRenderer implements GLSurfaceView.Renderer {
         }*/
     }
 
+    Vector3 hit;
     void folding()
     {
         if(!moveClick)
         {
-            RaycastHit hit;
+            hit = new Vector3();
             Ray ray = cam.getPickRay(touchX, touchY);
-            if ( Physics.Raycast(ray, out hit, 99999))
+            if (Intersector.intersectRayTriangles(ray, mCube.verts, hit))
             {
                 if(lastHit != hit.collider.gameObject && lastHit)
                 {
