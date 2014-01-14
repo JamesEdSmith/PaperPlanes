@@ -136,6 +136,11 @@ class Paper
 
     }
 
+    public void resetColour()
+    {
+
+    }
+
     public void rotateAround(new Vector3(foldPoint1.x, foldPoint1.y, 0f), axis, foldAngle)
     {
         //TODO:IMPLEMENT THIS, IMPLEMENT IT REAL GOOD.

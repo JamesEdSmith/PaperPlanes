@@ -15,6 +15,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.math.collision.*;
 
 /**
  * Render a pair of tumbling cubes.
@@ -27,9 +28,10 @@ class PaperRenderer implements GLSurfaceView.Renderer {
     private float foldTracker;
     private boolean mTranslucentBackground;
     private Paper mCube;
+    private Paper lastHit;
     private float mAngle;
-    private Vector2 foldPoint1;
-    private Vector2 foldPoint2;
+    private Vector3 foldPoint1;
+    private Vector3 foldPoint2;
     float touchX;
     float touchY;
     Camera cam;
@@ -182,16 +184,21 @@ class PaperRenderer implements GLSurfaceView.Renderer {
         //foreach(Transform child in movingFold.transform)
         //child.RotateAround(new Vector3(foldPoint1.x, foldPoint1.y, 0f), axis, foldAngle);
 
-        //TODO: ADD THIS BACK IN
-        /*if(Input.GetButton("Fire1"))
+        if(getTouchState())
         {
             movingFold = null;
             moveClick = true;
             foldTracker = 0f;
-        }*/
+        }
+    }
+
+    boolean getTouchState()
+    {
+        return true;
     }
 
     Vector3 hit;
+    boolean prevClick
     void folding()
     {
         if(!moveClick)
@@ -200,92 +207,25 @@ class PaperRenderer implements GLSurfaceView.Renderer {
             Ray ray = cam.getPickRay(touchX, touchY);
             if (Intersector.intersectRayTriangles(ray, mCube.verts, hit))
             {
-                if(lastHit != hit.collider.gameObject && lastHit)
-                {
-                    lastHit.renderer.material.color = Color.white;
-                }
-
-                if ( hit.collider.gameObject.renderer )
-                {
-
-                    hit.collider.gameObject.renderer.material.color = new Color(0.19f, 0.55f, 0.91f, 1.0f);
-                    hitLastUpdate = true;
-
-                }
-
-                if(Input.GetButton("Fire1"))
+                if(getTouchState())
                 {
                     if(!prevClick)
                     {
-                        foldPoint1 = new Vector2(hit.point.x, hit.point.y);
+                        foldPoint1 = new Vector3(hit.x, hit.y, hit.z);
                     }
                     prevClick = true;
-                    hit.collider.gameObject.renderer.material.color = new Color(1.0f, 0.55f, 0.91f, 1.0f);
                 }
                 else
                 {
                     if (prevClick)
                     {
-                        foldPoint2 = new Vector2(hit.point.x, hit.point.y);
-                        foldLine((MeshCollider)hit.collider);
-                        hit.collider.gameObject.renderer.material.color = new Color(0.19f, 0.55f, 0.91f, 1.0f);
+                        foldPoint2 = new Vector2(hit.x, hit.y, hit.z);
+                        foldLine(mCube);
                     }
                     prevClick = false;
                 }
 
-                lastHit = hit.collider.gameObject;
-            }
-            else if (hitLastUpdate && lastHit != null)
-            {
-                lastHit.renderer.material.color = Color.white;
-                hitLastUpdate = false;
-            }
-            // paper turning
-            bool moved = false;
-
-            if(refacedLastUpdate)
-            {
-                if(Input.GetAxis("Horizontal") == 0)
-                    refacedLastUpdate = false;
-            }
-            else
-            {
-                if(Input.GetAxis("Horizontal") > 0)
-                {
-                    polygonTester.foldSections[camFoldIndex].renderer.material.color = Color.white;
-                    camFoldIndex++;
-                    if(camFoldIndex >= polygonTester.foldSections.Count)
-                    {
-                        camFoldIndex = 0;
-                    }
-                    polygonTester.foldSections[camFoldIndex].renderer.material.color = Color.green;
-                    moved = true;
-                }
-                else if (Input.GetAxis("Horizontal") < 0)
-                {
-                    polygonTester.foldSections[camFoldIndex].renderer.material.color = Color.white;
-                    camFoldIndex--;
-                    if(camFoldIndex < 0 )
-                    {
-                        camFoldIndex = polygonTester.foldSections.Count -1;
-                    }
-                    polygonTester.foldSections[camFoldIndex].renderer.material.color = Color.green;
-                    moved = true;
-                }
-
-                if (moved)
-                {
-                    Vector3 shift = Vector3.zero - polygonTester.foldSections[camFoldIndex].transform.position;
-
-                    str2 = "shift " + shift.x + " " + shift.y + " " + shift.z;
-
-                    foreach(GameObject go in polygonTester.foldSections)
-                    {
-                        go.transform.position += shift;
-                    }
-
-                    refacedLastUpdate = true;
-                }
+                //lastHit = hit.collider.gameObject;
             }
         }
         else
