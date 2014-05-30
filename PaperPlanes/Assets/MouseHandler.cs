@@ -21,11 +21,13 @@ public class MouseHandler : MonoBehaviour
 	public int camFoldIndex;
 	public bool refacedLastUpdate;
 	public List<GameObject> movingFoldSections;
+	public List<MeshCollider> foldSections;
 	
 	// Use this for initialization
 	void Start () 
 	{
 		movingFoldSections = new List<GameObject>();
+		foldSections = new List<MeshCollider>();
 		hitLastUpdate = false;
 		prevClick = false;
 		moveClick = false;
@@ -99,8 +101,8 @@ public class MouseHandler : MonoBehaviour
 		
 		if(Input.GetButton("Fire1"))
 		{
-			if(Mathf.Abs(foldTracker) == 180)
-				polygonTester.combineFolds(movingFold, otherFold);
+			//if(Mathf.Abs(foldTracker) == 180)
+			//	polygonTester.combineFolds(movingFold, otherFold);
 
 			movingFold = null;
 			otherFold = null;
@@ -108,6 +110,53 @@ public class MouseHandler : MonoBehaviour
 			foldTracker = 0f;
 
 		}
+	}
+
+	void findOtherFolds (MeshCollider collider)
+	{
+		/*RaycastHit hit;
+		Vector3 foldV1 = new Vector3(foldPoint1.x, foldPoint1.y, 0f);
+		Vector3 foldV2 = new Vector3 (foldPoint2.x, foldPoint2.y, 0f);
+		Vector3 direction = foldV2 - foldV1;
+		direction.Normalize();
+		Ray ray = new Ray(foldV1 , direction);
+
+		List<GameObject> foldsList = new List<GameObject>();
+		List<Mesh> meshList = new List<Mesh>();
+		foldsList.Add(collider.gameObject);
+		meshList.Add(((MeshCollider)collider).sharedMesh);
+		//((MeshCollider)collider).sharedMesh = null;
+
+		while ( Physics.Raycast(ray, out hit, 99999))
+		{
+			meshList.Add(((MeshCollider)hit.collider).sharedMesh);
+			foldsList.Add(hit.collider.gameObject);
+			((MeshCollider)hit.collider).sharedMesh = null;
+		}
+
+		direction = foldV1 - foldV2;
+		direction.Normalize();
+		ray = new Ray(foldV2 , direction);
+
+		while ( Physics.Raycast(ray, out hit, 99999))
+		{
+			meshList.Add(((MeshCollider)hit.collider).sharedMesh);
+			foldsList.Add(hit.collider.gameObject);
+			((MeshCollider)hit.collider).sharedMesh = null;
+		}
+
+		for(int i = 0; i < foldsList.Count; i++)
+		{
+			MeshCollider mc = foldsList[i].GetComponent<MeshCollider>();
+			mc.sharedMesh = meshList[i];
+			foldSections.Add(mc);
+		}
+		*/
+		foreach(GameObject go in polygonTester.foldSections)
+		{
+			foldSections.Add(go.GetComponent<MeshCollider>());
+		}
+
 	}
 
 	void folding()
@@ -145,7 +194,10 @@ public class MouseHandler : MonoBehaviour
 					if (prevClick)
 					{
 						foldPoint2 = new Vector2(hit.point.x, hit.point.y);
-						foldLine((MeshCollider)hit.collider);
+						findOtherFolds((MeshCollider)hit.collider);
+						foldLine();
+						foldSections.Clear();
+
 						hit.collider.gameObject.renderer.material.color = new Color(1f, 0f, 1f, 1.0f);
 					}
 					prevClick = false;
@@ -215,67 +267,72 @@ public class MouseHandler : MonoBehaviour
 		}
 	}
 	
-	void foldLine(MeshCollider collider)
+	void foldLine()
 	{
-		Mesh mesh = collider.sharedMesh;
-		List<Vector2> poly1 = new List<Vector2>();
-		List<Vector2> poly2 = new List<Vector2>();
-		
-		m = (foldPoint2.y - foldPoint1.y)/(foldPoint2.x - foldPoint1.x);
-		c = foldPoint1.y - (m * foldPoint1.x);
-		if(m > 1f)
+		movingFoldSections.Clear();
+
+		foreach(MeshCollider collider in foldSections)
 		{
-			foldPoint1.y = 100f;
-			foldPoint1.x = (100f - c) / m;
-			foldPoint2.y = -100f;
-			foldPoint2.x = (-100f - c) / m;
-		}
-		else
-		{
-			foldPoint1.x = 100f;
-			foldPoint1.y = 100f * m + c;
-			foldPoint2.x = -100f;
-			foldPoint2.y = -100f * m + c;
-		}
-		
-		Vector3 prevVert = mesh.vertices[mesh.vertices.Length - 1];
-		Vector3 currVert;
-		
-		for(int i = 0; i < mesh.vertices.Length; i++)
-		{
-			currVert = mesh.vertices[i];
-			Vector2 intersection = new Vector2();
-			if(DoLineSegmentIntersection(new Vector2(currVert.x, currVert.y), new Vector2(prevVert.x, prevVert.y), foldPoint1, foldPoint2, out intersection))
+			Mesh mesh = collider.sharedMesh;
+			List<Vector2> poly1 = new List<Vector2>();
+			List<Vector2> poly2 = new List<Vector2>();
+			
+			m = (foldPoint2.y - foldPoint1.y)/(foldPoint2.x - foldPoint1.x);
+			c = foldPoint1.y - (m * foldPoint1.x);
+			if(m > 1f)
 			{
-				poly1.Add(new Vector2(intersection.x, intersection.y));
-				poly2.Add(new Vector2(intersection.x, intersection.y));
-				poly2.Add(currVert);
-				prevVert = currVert;
-				for(int j = i+1; j < mesh.vertices.Length; j++)
+				foldPoint1.y = 100f;
+				foldPoint1.x = (100f - c) / m;
+				foldPoint2.y = -100f;
+				foldPoint2.x = (-100f - c) / m;
+			}
+			else
+			{
+				foldPoint1.x = 100f;
+				foldPoint1.y = 100f * m + c;
+				foldPoint2.x = -100f;
+				foldPoint2.y = -100f * m + c;
+			}
+			
+			Vector3 prevVert = mesh.vertices[mesh.vertices.Length - 1];
+			Vector3 currVert;
+			
+			for(int i = 0; i < mesh.vertices.Length; i++)
+			{
+				currVert = mesh.vertices[i];
+				Vector2 intersection = new Vector2();
+				if(DoLineSegmentIntersection(new Vector2(currVert.x, currVert.y), new Vector2(prevVert.x, prevVert.y), foldPoint1, foldPoint2, out intersection))
 				{
-					currVert = mesh.vertices[j];
-					if(DoLineSegmentIntersection(new Vector2(currVert.x, currVert.y), new Vector2(prevVert.x, prevVert.y), foldPoint1, foldPoint2, out intersection))
-					{
-						poly1.Add(new Vector2(intersection.x, intersection.y));
-						poly2.Add(new Vector2(intersection.x, intersection.y));
-						prevVert = currVert;
-						i = j;
-						currVert = mesh.vertices[i];
-						break;
-					}
+					poly1.Add(new Vector2(intersection.x, intersection.y));
+					poly2.Add(new Vector2(intersection.x, intersection.y));
 					poly2.Add(currVert);
 					prevVert = currVert;
+					for(int j = i+1; j < mesh.vertices.Length; j++)
+					{
+						currVert = mesh.vertices[j];
+						if(DoLineSegmentIntersection(new Vector2(currVert.x, currVert.y), new Vector2(prevVert.x, prevVert.y), foldPoint1, foldPoint2, out intersection))
+						{
+							poly1.Add(new Vector2(intersection.x, intersection.y));
+							poly2.Add(new Vector2(intersection.x, intersection.y));
+							prevVert = currVert;
+							i = j;
+							currVert = mesh.vertices[i];
+							break;
+						}
+						poly2.Add(currVert);
+						prevVert = currVert;
+					}
+					
 				}
-				
+				poly1.Add(currVert);
+				prevVert = currVert;
 			}
-			poly1.Add(currVert);
-			prevVert = currVert;
+			polygonTester.recreatePolygons(collider.gameObject, poly1, poly2);
+			//find all the folds that are attached to this one so we can move all of them at once as we fold
+
+			createMovingFolds(movingFold, otherFold);
+			foldAngle = 0f;
 		}
-		polygonTester.recreatePolygons(collider.gameObject, poly1, poly2);
-		//find all the folds that are attached to this one so we can move all of them at once as we fold
-		movingFoldSections.Clear();
-		createMovingFolds(movingFold, otherFold);
-		foldAngle = 0f;
 	}
 
 	void createMovingFolds(GameObject currFold, GameObject prevFold)

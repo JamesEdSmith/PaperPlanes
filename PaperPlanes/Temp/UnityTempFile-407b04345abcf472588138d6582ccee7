@@ -38,7 +38,9 @@
 -define:UNITY_EDITOR_OSX
 'Assets/MouseHandler.cs'
 'Assets/PolygonTester.cs'
+'Assets/Properties/AssemblyInfo.cs'
 'Assets/Triangulator.cs'
+'Assets/clipper.cs'
 'Assets/textUpdater.cs'
 -r:'/Applications/Unity/Unity.app/Contents/Frameworks/Mono/lib/mono/unity/System.Runtime.Serialization.dll'
 -r:'/Applications/Unity/Unity.app/Contents/Frameworks/Mono/lib/mono/unity/System.Xml.Linq.dll'
