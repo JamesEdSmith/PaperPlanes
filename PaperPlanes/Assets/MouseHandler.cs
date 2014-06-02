@@ -95,7 +95,7 @@ public class MouseHandler : MonoBehaviour
 			}
 		}
 		
-		movingFold.transform.RotateAround(new Vector3(foldPoint1.x, foldPoint1.y, 0f), axis, foldAngle);
+		//movingFold.transform.RotateAround(new Vector3(foldPoint1.x, foldPoint1.y, 0f), axis, foldAngle);
 		foreach(GameObject fold in movingFoldSections)
 			fold.transform.RotateAround(new Vector3(foldPoint1.x, foldPoint1.y, 0f), axis, foldAngle);
 		
@@ -195,6 +195,7 @@ public class MouseHandler : MonoBehaviour
 					{
 						foldPoint2 = new Vector2(hit.point.x, hit.point.y);
 						findOtherFolds((MeshCollider)hit.collider);
+
 						foldLine();
 						foldSections.Clear();
 
@@ -294,12 +295,12 @@ public class MouseHandler : MonoBehaviour
 				foldPoint2.y = -100f * m + c;
 			}
 			
-			Vector3 prevVert = mesh.vertices[mesh.vertices.Length - 1];
+			Vector3 prevVert = collider.transform.TransformPoint(mesh.vertices[mesh.vertices.Length - 1]);
 			Vector3 currVert;
 			
 			for(int i = 0; i < mesh.vertices.Length; i++)
 			{
-				currVert = mesh.vertices[i];
+				currVert = collider.transform.TransformPoint(mesh.vertices[i]);
 				Vector2 intersection = new Vector2();
 				if(DoLineSegmentIntersection(new Vector2(currVert.x, currVert.y), new Vector2(prevVert.x, prevVert.y), foldPoint1, foldPoint2, out intersection))
 				{
@@ -309,14 +310,14 @@ public class MouseHandler : MonoBehaviour
 					prevVert = currVert;
 					for(int j = i+1; j < mesh.vertices.Length; j++)
 					{
-						currVert = mesh.vertices[j];
+						currVert = collider.transform.TransformPoint(mesh.vertices[j]);
 						if(DoLineSegmentIntersection(new Vector2(currVert.x, currVert.y), new Vector2(prevVert.x, prevVert.y), foldPoint1, foldPoint2, out intersection))
 						{
 							poly1.Add(new Vector2(intersection.x, intersection.y));
 							poly2.Add(new Vector2(intersection.x, intersection.y));
 							prevVert = currVert;
 							i = j;
-							currVert = mesh.vertices[i];
+							currVert = collider.transform.TransformPoint(mesh.vertices[i]);
 							break;
 						}
 						poly2.Add(currVert);
@@ -329,7 +330,7 @@ public class MouseHandler : MonoBehaviour
 			}
 			polygonTester.recreatePolygons(collider.gameObject, poly1, poly2);
 			//find all the folds that are attached to this one so we can move all of them at once as we fold
-
+			movingFoldSections.Add(movingFold);
 			createMovingFolds(movingFold, otherFold);
 			foldAngle = 0f;
 		}

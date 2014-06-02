@@ -228,6 +228,7 @@ public class PolygonTester : MonoBehaviour {
 	
 	public void recreatePolygons(GameObject mcollider, List<Vector2> polyList1, List<Vector2> polyList2)
 	{
+		Quaternion rotation = new Quaternion(mcollider.transform..x, mcollider.transform.rotation.y, mcollider.transform.rotation.z, mcollider.transform.rotation.w);
 		removeFoldSection(mcollider);
 		
 		Vector2[] poly1 = new Vector2[polyList1.Count];
@@ -236,7 +237,7 @@ public class PolygonTester : MonoBehaviour {
 		{
 			poly1[i] = polyList1[i];
 		}
-		
+
 		GameObject newFold1 = createPolygon(poly1);
 
 		Vector2[] poly2 = new Vector2[polyList2.Count];
@@ -247,7 +248,6 @@ public class PolygonTester : MonoBehaviour {
 		}
 
 		GameObject newFold2 = createPolygon(poly2);
-		
 
 		
 		if(newFold1.collider.bounds.size.sqrMagnitude < newFold2.collider.bounds.size.sqrMagnitude)
