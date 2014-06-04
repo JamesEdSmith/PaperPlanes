@@ -76,16 +76,19 @@ public class PolygonTester : MonoBehaviour {
 	
 	public void addFoldSection(GameObject newFold)
 	{
+		if(newFold.GetComponent<MeshCollider>().sharedMesh.vertices.Length<1)
+			Debug.LogError("wtf");
 		foldSections.Add(newFold);
 	}
 	
 	public void removeFoldSection(GameObject fold)
 	{
 		foldSections.Remove(fold);
+
 		Destroy(fold);
 	}
 
-	public void combineFolds(GameObject obj1, GameObject obj2)
+	/*public void combineFolds(GameObject obj1, GameObject obj2)
 	{
 		removeFoldSection(obj1);
 		removeFoldSection(obj2);
@@ -144,7 +147,7 @@ public class PolygonTester : MonoBehaviour {
 			}
 		}
 		createPolygon(combinedPoly.ToArray());
-	}
+	}*/
 
 	bool checkForVector(List<Vector2> list, Vector2 vert)
 	{
@@ -171,6 +174,8 @@ public class PolygonTester : MonoBehaviour {
 
 	GameObject createPolygon(Vector2[] poly1)
 	{
+		if(poly1.Length <= 1)
+			return null;
 		// Use the triangulator to get indices for creating triangles
 		Triangulator tr = new Triangulator(poly1);
 		int[] indices = tr.Triangulate();
@@ -225,12 +230,14 @@ public class PolygonTester : MonoBehaviour {
 		addFoldSection (newFold1);
 		return newFold1;
 	}
+
+	public float checkSide(Vector2 a, Vector2 b, Vector2 c){
+		return ((b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x));
+	}
+
 	
 	public void recreatePolygons(GameObject mcollider, List<Vector2> polyList1, List<Vector2> polyList2)
-	{
-		Quaternion rotation = new Quaternion(mcollider.transform..x, mcollider.transform.rotation.y, mcollider.transform.rotation.z, mcollider.transform.rotation.w);
-		removeFoldSection(mcollider);
-		
+	{	
 		Vector2[] poly1 = new Vector2[polyList1.Count];
 
 		for(int i = 0; i<polyList1.Count; i++)
@@ -249,18 +256,106 @@ public class PolygonTester : MonoBehaviour {
 
 		GameObject newFold2 = createPolygon(poly2);
 
-		
-		if(newFold1.collider.bounds.size.sqrMagnitude < newFold2.collider.bounds.size.sqrMagnitude)
+		if(mouseHander.movingFoldSections.Count > 0)
 		{
-			mouseHander.movingFold = newFold1;
-			mouseHander.otherFold = newFold2;
+			bool leftOrRight = false;
+			int left = 0;
+			int right = 0; 
+			float result =0;
+
+			foreach(Vector3 vert3d in mouseHander.movingFoldSections[0].GetComponent<MeshCollider>().sharedMesh.vertices)
+			{
+				result = checkSide(mouseHander.foldPoint1, mouseHander.foldPoint2, new Vector2(mouseHander.movingFoldSections[0].transform.TransformPoint(vert3d).x, mouseHander.movingFoldSections[0].transform.TransformPoint(vert3d).y));
+				if(result < 0)
+					left++;
+				else if (result > 0)
+					right++;
+			}
+
+			if(left > right)
+				leftOrRight = true;
+			else
+				leftOrRight = false;
+
+			left = 0;
+			right = 0; 
+
+			foreach(Vector2 vert2d in poly1)
+			{
+				result = checkSide(mouseHander.foldPoint1, mouseHander.foldPoint2, vert2d);
+				if(result < 0)
+					left++;
+				else if (result > 0)
+					right++;
+			}
+
+			bool poly1LeftOrRight;
+
+			if(left > right)
+				poly1LeftOrRight = true;
+			else
+				poly1LeftOrRight = false;
+
+			left = 0;
+			right = 0; 
+			
+			foreach(Vector2 vert2d in poly2)
+			{
+				result = checkSide(mouseHander.foldPoint1, mouseHander.foldPoint2, vert2d);
+				if(result < 0)
+					left++;
+				else if (result > 0)
+					right++;
+			}
+			
+			bool poly2LeftOrRight;
+			
+			if(left > right)
+				poly1LeftOrRight = true;
+			else
+				poly1LeftOrRight = false;
+
+			if(leftOrRight != poly1LeftOrRight)
+			{
+				mouseHander.movingFoldSections.Add(newFold1);
+				if(poly2.Length> 0)
+					mouseHander.otherFoldSections.Add(newFold2);
+				newFold1.GetComponent<MeshFilter>().renderer.material.color = new Color(1f, 0f, 1f, 1.0f);
+			}
+			else{
+				if(poly2.Length> 0)
+				{
+					mouseHander.movingFoldSections.Add(newFold2);
+					newFold2.GetComponent<MeshFilter>().renderer.material.color = new Color(1f, 0f, 1f, 1.0f);
+				}
+				mouseHander.otherFoldSections.Add(newFold1);
+			}
+		}
+		else if(poly2.Length> 0)
+		{
+			if(newFold1.collider.bounds.size.sqrMagnitude < newFold2.collider.bounds.size.sqrMagnitude)
+			{
+				mouseHander.movingFoldSections.Add(newFold1);
+				if(poly2.Length> 0)
+					mouseHander.otherFoldSections.Add(newFold2);
+				newFold1.GetComponent<MeshFilter>().renderer.material.color = new Color(1f, 0f, 1f, 1.0f);
+			}
+			else
+			{
+				if(poly2.Length> 0)
+				{
+					mouseHander.movingFoldSections.Add(newFold2);
+					newFold2.GetComponent<MeshFilter>().renderer.material.color = new Color(1f, 0f, 1f, 1.0f);
+				}
+				mouseHander.otherFoldSections.Add(newFold1);
+			}
+		}
+		// no poly 2
+		else{
+			mouseHander.movingFoldSections.Add(newFold1);
 			newFold1.GetComponent<MeshFilter>().renderer.material.color = new Color(1f, 0f, 1f, 1.0f);
 		}
-		else
-		{
-			mouseHander.movingFold = newFold2;
-			mouseHander.otherFold = newFold1;
-			newFold2.GetComponent<MeshFilter>().renderer.material.color = new Color(1f, 0f, 1f, 1.0f);
-		}
+
+		removeFoldSection(mcollider);
 	}
 }

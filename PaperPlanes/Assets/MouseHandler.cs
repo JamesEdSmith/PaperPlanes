@@ -4,8 +4,8 @@ using System.Collections.Generic;
 public class MouseHandler : MonoBehaviour 
 {
 	bool hitLastUpdate;
-	Vector2 foldPoint1;
-	Vector2 foldPoint2;
+	public Vector2 foldPoint1;
+	public Vector2 foldPoint2;
 	float foldAngle;
 	float foldTracker;
 	bool prevClick;
@@ -14,6 +14,7 @@ public class MouseHandler : MonoBehaviour
 	float m;
 	string str;
 	string str2;
+	string str3;
 	public PolygonTester polygonTester;
 	GameObject lastHit;
 	public GameObject movingFold;
@@ -21,12 +22,19 @@ public class MouseHandler : MonoBehaviour
 	public int camFoldIndex;
 	public bool refacedLastUpdate;
 	public List<GameObject> movingFoldSections;
+	public List<GameObject> otherFoldSections;
+	public List<GameObject> addedMovingFoldSections;
+	public List<GameObject> deadFoldSections;
+
 	public List<MeshCollider> foldSections;
 	
 	// Use this for initialization
 	void Start () 
 	{
 		movingFoldSections = new List<GameObject>();
+		otherFoldSections = new List<GameObject>();
+		addedMovingFoldSections = new List<GameObject>();
+		deadFoldSections = new List<GameObject>();
 		foldSections = new List<MeshCollider>();
 		hitLastUpdate = false;
 		prevClick = false;
@@ -35,31 +43,34 @@ public class MouseHandler : MonoBehaviour
 		camFoldIndex = 0;
 		m = 0f;
 		c = 0f;
+		str3 = "What";
 	}
 	
 	void OnGUI()
 	{
         GUI.TextArea (new Rect (10, 10, 400, 25), str);
-		//GUI.TextArea (new Rect (10, 40, 400, 200), str2);
+		//GUI.TextArea (new Rect (10, 40, 400, 200), str3);
     }
 	
 	void Update()
 	{
-		if(movingFold)
+		if(movingFoldSections.Count > 0)
 			moving();
 		else
 			folding();
 		
 
 		str = "foldAngle: " + foldTracker;
-		if(movingFold)
+		if(movingFoldSections.Count > 0)
 		{
 			str2 = "movingVerts: ";
-			foreach(Vector3 v in movingFold.GetComponent<MeshFilter>().mesh.vertices)
+			foreach(Vector3 v in movingFoldSections[0].GetComponent<MeshFilter>().mesh.vertices)
 				str2 += " " + v.ToString();
 		}
 		else
 			str = " ";
+
+		str3 = "mousehander.foldsections: " + foldSections.Count + "\npolygonTester.foldSections: " + polygonTester.foldSections.Count;
 		LineRenderer lineRenderer = GetComponent<LineRenderer>();
 		lineRenderer.SetVertexCount(2);
 		lineRenderer.SetPosition(0, new Vector3(foldPoint1.x, foldPoint1.y, 0f));
@@ -104,8 +115,9 @@ public class MouseHandler : MonoBehaviour
 			//if(Mathf.Abs(foldTracker) == 180)
 			//	polygonTester.combineFolds(movingFold, otherFold);
 
-			movingFold = null;
-			otherFold = null;
+
+			movingFoldSections.Clear();
+			otherFoldSections.Clear();
 			moveClick = true;
 			foldTracker = 0f;
 
@@ -114,44 +126,6 @@ public class MouseHandler : MonoBehaviour
 
 	void findOtherFolds (MeshCollider collider)
 	{
-		/*RaycastHit hit;
-		Vector3 foldV1 = new Vector3(foldPoint1.x, foldPoint1.y, 0f);
-		Vector3 foldV2 = new Vector3 (foldPoint2.x, foldPoint2.y, 0f);
-		Vector3 direction = foldV2 - foldV1;
-		direction.Normalize();
-		Ray ray = new Ray(foldV1 , direction);
-
-		List<GameObject> foldsList = new List<GameObject>();
-		List<Mesh> meshList = new List<Mesh>();
-		foldsList.Add(collider.gameObject);
-		meshList.Add(((MeshCollider)collider).sharedMesh);
-		//((MeshCollider)collider).sharedMesh = null;
-
-		while ( Physics.Raycast(ray, out hit, 99999))
-		{
-			meshList.Add(((MeshCollider)hit.collider).sharedMesh);
-			foldsList.Add(hit.collider.gameObject);
-			((MeshCollider)hit.collider).sharedMesh = null;
-		}
-
-		direction = foldV1 - foldV2;
-		direction.Normalize();
-		ray = new Ray(foldV2 , direction);
-
-		while ( Physics.Raycast(ray, out hit, 99999))
-		{
-			meshList.Add(((MeshCollider)hit.collider).sharedMesh);
-			foldsList.Add(hit.collider.gameObject);
-			((MeshCollider)hit.collider).sharedMesh = null;
-		}
-
-		for(int i = 0; i < foldsList.Count; i++)
-		{
-			MeshCollider mc = foldsList[i].GetComponent<MeshCollider>();
-			mc.sharedMesh = meshList[i];
-			foldSections.Add(mc);
-		}
-		*/
 		foreach(GameObject go in polygonTester.foldSections)
 		{
 			foldSections.Add(go.GetComponent<MeshCollider>());
@@ -193,11 +167,11 @@ public class MouseHandler : MonoBehaviour
 				{
 					if (prevClick)
 					{
+						foldSections.Clear();
 						foldPoint2 = new Vector2(hit.point.x, hit.point.y);
 						findOtherFolds((MeshCollider)hit.collider);
 
 						foldLine();
-						foldSections.Clear();
 
 						hit.collider.gameObject.renderer.material.color = new Color(1f, 0f, 1f, 1.0f);
 					}
@@ -271,6 +245,7 @@ public class MouseHandler : MonoBehaviour
 	void foldLine()
 	{
 		movingFoldSections.Clear();
+		otherFoldSections.Clear();
 
 		foreach(MeshCollider collider in foldSections)
 		{
@@ -329,36 +304,45 @@ public class MouseHandler : MonoBehaviour
 				prevVert = currVert;
 			}
 			polygonTester.recreatePolygons(collider.gameObject, poly1, poly2);
-			//find all the folds that are attached to this one so we can move all of them at once as we fold
-			movingFoldSections.Add(movingFold);
-			createMovingFolds(movingFold, otherFold);
+
 			foldAngle = 0f;
 		}
+
+		/*foreach (GameObject fold in movingFoldSections)
+			createMovingFolds(fold, fold);
+		foreach(GameObject addedFold in addedMovingFoldSections)
+			movingFoldSections.Add (addedFold);*/
 	}
 
 	void createMovingFolds(GameObject currFold, GameObject prevFold)
 	{
 
+		Mesh currMesh = currFold.GetComponent<MeshFilter>().mesh;
+		Mesh foldMesh;
+
 		foreach(GameObject fold in polygonTester.foldSections)
 		{
+			foldMesh = fold.GetComponent<MeshFilter>().mesh;
 			if(fold != prevFold && fold != currFold && fold != otherFold)
 			{
 				int sharedVerts = 0;
-				foreach(Vector3 vert in currFold.GetComponent<MeshFilter>().mesh.vertices)
+				foreach(Vector3 vert in currMesh.vertices)
 				{
-					foreach(Vector3 vert2 in fold.GetComponent<MeshFilter>().mesh.vertices)
+					foreach(Vector3 vert2 in foldMesh.vertices)
 					{
-						if (vert.x == vert2.x && vert.y == vert2.y && vert.z == vert2.z)
+						if (currFold.transform.TransformPoint(vert).x == fold.transform.TransformPoint(vert2).x 
+						    && currFold.transform.TransformPoint(vert).y == fold.transform.TransformPoint(vert2).y 
+						    && currFold.transform.TransformPoint(vert).z == fold.transform.TransformPoint(vert2).z)
 						{
 							sharedVerts++;
-							createMovingFolds(fold, currFold);
 						}
 					}
 				}
 				
-				if(sharedVerts >= 2 && !movingFoldSections.Contains(fold))
+				if(sharedVerts >= 2 && !movingFoldSections.Contains(fold) && !otherFoldSections.Contains(fold) && addedMovingFoldSections.Contains(fold))
 				{
-					movingFoldSections.Add(fold);
+					addedMovingFoldSections.Add(fold);
+					createMovingFolds(fold, currFold);
 				}
 			}
 		}
